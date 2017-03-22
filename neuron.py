@@ -1,42 +1,36 @@
 import pickle
-from random import randrange
+from random import uniform
 
 
+# Classe qui gère un neurone et porte toute sa logique.
 class Neuron:
+    # Lors de note init on random les valeurs de base.
     def __init__(self):
+        self.weight = uniform(-1, 1)
+        self.bias = uniform(-1, 1)
+        self.r = 0.01
 
-        self.weight = randrange(-1, 1)
-        self.bias = randrange(-1, 1)
-        self.r = 0.05
-
+    # En destructeur on register le neurone dans son état actuel.
     def __del__(self):
         with open("neuron.dump", "wb") as f:
-            pick = pickle.Pickler(f)
-            pick.dump(self)
+            pickle.dump(self, f, protocol=2)
+            print("Saved myself in neuron.dump")
 
-    def save(self):
+    # On charge le neurone sauvegardé.
+    def load(self):
         with open("neuron.dump", "wb") as f:
-            pick = pickle.Pickler(f)
-            pick.dump(self)
+            pickle.dump(self, f, protocol=2)
 
+    # Permet de faire une étape de training
     def use(self, x, result):
 
-        value = x * self.weight
+        value = x * self.weight + self.bias
 
         if value == result:
-            print('I found it ! gimme a harder one !')
+            print('I found it ! Gimme a harder one !')
         else:
-            #On compare le résultat de base avec le résultat attendu pour gérer le biais
-            if value > result:
-                self.weight -= self.r
-            else:
-                self.weight += self.r
+            self.weight += (result - value) * self.r * 0.01 * x
+            self.bias += (result - value) * self.r * 0.05
 
-            if self.bias + value > result:
-                self.bias -= self.r
-            else:
-                self.bias += self.r
-
-        print('current weight : ' + str(self.weight))
-        print('current bias : ' + str(self.bias))
+        print('\rweight : ' + str(self.weight) + ' | bias : ' + str(self.bias), end='')
         return value + self.bias
